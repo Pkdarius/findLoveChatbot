@@ -32,7 +32,7 @@ exports.saveUser = (doc, options, callback) => {
           callback();
         }
       }
-    });
+    }); 
   });
 }
 
