@@ -33,7 +33,27 @@ exports.handleMessage = (sender_psid, received_message) => {
         const response = {
           text: received_message.text
         }
-        this.callSendAPI(user.chatWith, response);
+
+        let promise = new Promise((resolve, reject) => {
+          this.sendActions(user.chatWith, 'mark_seen');
+          resolve();
+        }).then(() => {
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              this.sendActions(user.chatWith, 'typing_on');
+              resolve();
+            }, 1000);
+          });
+        }).then(() => {
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              this.sendActions(user.chatWith, 'typing_off');
+              resolve();
+            }, received_message.text.length * 800);
+          });
+        }).then(() => {
+          this.callSendAPI(user.chatWith, response);
+        });        
       } else if (received_message.attachments) {
         console.log(received_message.attachments);
         let response = {
@@ -391,6 +411,7 @@ exports.handlePostback = (sender_psid, received_postback) => {
           const response = {
             "text": "Cảm ơn phản hồi của bạn. Chúng tôi sẽ kiểm tra người dùng này và đưa ra quyết định!"
           }
+          await enduserDB.updateUser(user.gender === 'male' ? 'female' : 'male', )
           await this.callSendAPI(sender_psid, response);
         } else {
           const response = {
@@ -409,6 +430,28 @@ exports.callSendAPI = (sender_psid, response) => {
       "id": sender_psid
     },
     "message": JSON.stringify(response)
+  }
+
+  request({
+    "uri": "https://graph.facebook.com/v3.3/me/messages",
+    "qs": { "access_token": PAGE_ACCESS_TOKEN },
+    "method": "POST",
+    "json": request_body
+  }, (err, res, body) => {
+    if (!err) {
+      console.log('body response: ', JSON.stringify(body));
+    } else {
+      console.error('Unable to send message:', err);
+    }
+  });
+}
+
+exports.sendActions = (sender_psid, type) => {
+  let request_body = {
+    "recipient": {
+      "id": sender_psid
+    },
+    "sender_action": type
   }
 
   request({
