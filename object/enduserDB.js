@@ -6,42 +6,70 @@ const DATABASE_NAME = config.get('DATABASE_NAME');
 exports.findUser = (query, callback) => {
   database.getConnection(client => {
     const db = client.db(DATABASE_NAME);
-    const collection = db.collection('Enduser');
-    collection.find(query).toArray((err, results) => {
-      if(err) {
+    const femaleCollection = db.collection('female');
+    femaleCollection.find(query).toArray((err, results) => {
+      if (err) {
         console.log('findUser err: ', err);
       } else {
-        console.log('findUser done!');
+        if (results.length === 0) {
+          const maleCollection = db.collection('male');
+          maleCollection.find(query).toArray((err, results) => {
+            if (err) {
+              console.log('findUser err: ', err);
+            } else {
+              console.log('findUser done!');
+              callback(results);
+            }
+          });
+        } else {
+          console.log('findUser done!');
+          callback(results);
+        }
+      }
+    });
+  });
+}
+
+exports.aggregateUser = (collectionName, aggregate, callback) => {
+  database.getConnection(client => {
+    const db = client.db(DATABASE_NAME);
+    const collection = db.collection(collectionName);
+
+    collection.aggregate(aggregate).toArray((err, results) => {
+      if (err) {
+        console.log('aggregateUser err: ', err);
+      } else {
+        console.log('aggregateUser done!');
         callback(results);
       }
     });
   });
 }
 
-exports.saveUser = (doc, options, callback) => {
+exports.saveUser = (collectionName, doc, options, callback) => {
   console.log(doc);
   database.getConnection(client => {
     const db = client.db(DATABASE_NAME);
-    const collection = db.collection('Enduser');
-    collection.insertOne(doc, options,(err, results) => {
-      if(err) {
+    const collection = db.collection(collectionName);
+    collection.insertOne(doc, options, (err, results) => {
+      if (err) {
         console.log('findUser err: ', err);
       } else {
         console.log('saveUser done!');
-        if(callback) {
+        if (callback) {
           callback();
         }
       }
-    }); 
+    });
   });
 }
 
-exports.updateUser = (filter, update, options) => {
+exports.updateUser = (collectionName, filter, update, options) => {
   database.getConnection(client => {
     const db = client.db(DATABASE_NAME);
-    const collection = db.collection('Enduser');
+    const collection = db.collection(collectionName);
     collection.updateOne(filter, update, options, (err, result) => {
-      if(err) {
+      if (err) {
         console.log('updateUser err: ', err);
       } else {
         console.log('updateUser done!');

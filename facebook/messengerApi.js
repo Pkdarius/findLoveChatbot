@@ -8,7 +8,7 @@ const GROUP_ID = config.get('GROUP_ID');
 const fbApi = require('./api');
 
 exports.handleMessage = (sender_psid, received_message) => {
-  enduserDB.findUser({ psid: sender_psid }, async (users) => {
+  enduserDB.findUser({ psid: sender_psid }, (users) => {
     const user = users[0];
     if (user.isFinding) {
       const response = {
@@ -27,13 +27,13 @@ exports.handleMessage = (sender_psid, received_message) => {
           }
         }
       }
-      await this.callSendAPI(sender_psid, response);
+      this.callSendAPI(sender_psid, response);
     } else if (user.isChatting) {
       if (received_message.text) {
         const response = {
           text: received_message.text
         }
-        await this.callSendAPI(user.chatWith, response);
+        this.callSendAPI(user.chatWith, response);
       } else if (received_message.attachments) {
         console.log(received_message.attachments);
         let response = {
@@ -42,7 +42,7 @@ exports.handleMessage = (sender_psid, received_message) => {
         if (response.attachment.payload.sticker_id) {
           delete response.attachment.payload.sticker_id;
         }
-        await this.callSendAPI(user.chatWith, response);
+        this.callSendAPI(user.chatWith, response);
       }
     } else {
       response = {
@@ -61,7 +61,7 @@ exports.handleMessage = (sender_psid, received_message) => {
           }
         }
       }
-      await this.callSendAPI(sender_psid, response);
+      this.callSendAPI(sender_psid, response);
     }
   });
 }
@@ -170,8 +170,8 @@ exports.handlePostback = (sender_psid, received_postback) => {
           }
           await this.callSendAPI(sender_psid, response);
         } else {
-          await enduserDB.updateUser({ psid: sender_psid }, { $set: { isFinding: true, isChatting: false, chatWith: '' } }, null);
-          await enduserDB.findUser({ psid: { $ne: sender_psid }, isFinding: true, isChatting: false, gender: { $ne: user.gender } }, async usersList => {
+          await enduserDB.updateUser(user.gender === 'male' ? 'male' : 'female', { psid: sender_psid }, { $set: { isFinding: true, isChatting: false, chatWith: '' } }, null);
+          await enduserDB.aggregateUser(user.gender !== 'male' ? 'male' : 'female', [{ $match: { psid: { $ne: sender_psid }, isFinding: true, isChatting: false, gender: { $ne: user.gender } } }, { $sample: { size: 1 } }], async usersList => {
             if (usersList.length === 0) {
               const response = {
                 "attachment": {
@@ -193,8 +193,8 @@ exports.handlePostback = (sender_psid, received_postback) => {
             } else {
               let randomUser = usersList[Math.floor(Math.random() * usersList.length)];
 
-              await enduserDB.updateUser({ psid: sender_psid }, { $set: { isFinding: false, isChatting: true, chatWith: randomUser.psid } }, null);
-              await enduserDB.updateUser({ psid: randomUser.psid }, { $set: { isFinding: false, isChatting: true, chatWith: sender_psid } }, null);
+              await enduserDB.updateUser(user.gender === 'male' ? 'male' : 'female', { psid: sender_psid }, { $set: { isFinding: false, isChatting: true, chatWith: randomUser.psid } }, null);
+              await enduserDB.updateUser(randomUser.gender === 'male' ? 'male' : 'female', { psid: randomUser.psid }, { $set: { isFinding: false, isChatting: true, chatWith: sender_psid } }, null);
 
               const response = {
                 "text": 'Mình đã tìm thấy một chú gấu 🐻 Chúc bạn có cuộc trò chuyện vui vẻ ^^!',
@@ -300,7 +300,7 @@ exports.handlePostback = (sender_psid, received_postback) => {
         break;
       case 'ACCEPT_CANCEL_FINDING':
         if (user.isFinding) {
-          await enduserDB.updateUser({ psid: sender_psid }, { $set: { isFinding: false, isChatting: false, chatWith: '' } }, null);
+          await enduserDB.updateUser(user.gender === 'male' ? 'male' : 'female', { psid: sender_psid }, { $set: { isFinding: false, isChatting: false, chatWith: '' } }, null);
           const response = {
             "attachment": {
               "type": "template",
@@ -337,8 +337,8 @@ exports.handlePostback = (sender_psid, received_postback) => {
           }
           await this.callSendAPI(sender_psid, response);
         } else if (user.isChatting) {
-          await enduserDB.updateUser({ psid: sender_psid }, { $set: { isFinding: false, isChatting: false, chatWith: '' } }, null);
-          await enduserDB.updateUser({ psid: user.chatWith }, { $set: { isFinding: false, isChatting: false, chatWith: '' } }, null);
+          await enduserDB.updateUser(user.gender === 'male' ? 'male' : 'female', { psid: sender_psid }, { $set: { isFinding: false, isChatting: false, chatWith: '' } }, null);
+          await enduserDB.updateUser(user.gender !== 'male' ? 'male' : 'female', { psid: user.chatWith }, { $set: { isFinding: false, isChatting: false, chatWith: '' } }, null);
           const response = {
             "attachment": {
               "type": "template",

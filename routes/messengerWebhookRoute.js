@@ -63,7 +63,7 @@ const webhookMessenger = (entry) => {
       }
     }).then((result) => {
       return new Promise((resolve, reject) => {
-        enduserDB.saveUser({
+        enduserDB.saveUser(result.gender, {
           psid: sender_psid,
           // birthday: result.birthday,
           gender: result.gender,
