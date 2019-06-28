@@ -42,14 +42,14 @@ exports.handleMessage = (sender_psid, received_message) => {
             setTimeout(() => {
               this.sendActions(user.chatWith, 'typing_on');
               resolve();
-            }, 1000);
+            }, 100);
           });
         }).then(() => {
           return new Promise((resolve, reject) => {
             setTimeout(() => {
               this.sendActions(user.chatWith, 'typing_off');
               resolve();
-            }, received_message.text.length * 800);
+            }, received_message.text.length * 80);
           });
         }).then(() => {
           this.callSendAPI(user.chatWith, response);
