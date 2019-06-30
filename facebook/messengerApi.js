@@ -49,7 +49,7 @@ exports.handleMessage = (sender_psid, received_message) => {
             setTimeout(() => {
               this.sendActions(user.chatWith, 'typing_off');
               resolve();
-            }, received_message.text.length * 80);
+            }, 100);
           });
         }).then(() => {
           this.callSendAPI(user.chatWith, response);
