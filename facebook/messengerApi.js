@@ -53,7 +53,7 @@ exports.handleMessage = (sender_psid, received_message) => {
           });
         }).then(() => {
           this.callSendAPI(user.chatWith, response);
-        });        
+        });
       } else if (received_message.attachments) {
         console.log(received_message.attachments);
         let response = {
@@ -411,7 +411,7 @@ exports.handlePostback = (sender_psid, received_postback) => {
           const response = {
             "text": "Cảm ơn phản hồi của bạn. Chúng tôi sẽ kiểm tra người dùng này và đưa ra quyết định!"
           }
-          await enduserDB.updateUser(user.gender === 'male' ? 'female' : 'male', )
+          await enduserDB.updateUser(user.gender === 'male' ? 'female' : 'male')
           await this.callSendAPI(sender_psid, response);
         } else {
           const response = {
